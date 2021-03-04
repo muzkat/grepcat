@@ -1,0 +1,25 @@
+{
+  "name": "grepcat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muzkat/grepcat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/muzkat/grepcat/issues"
+  },
+  "homepage": "https://github.com/muzkat/grepcat#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "node-fetch": "^2.6.1",
+    "request": "^2.88.2",
+    "xml2js": "^0.4.23"
+  }
+}
