@@ -85,18 +85,25 @@ const createReport = function (url, data, params = {}) {
     }, params))
 }
 
+const writeToDisk = function (reportObject, json) {
+    var fileName = reportObject.name;
+    fileName += '-' + reportObject.now.getFullYear() + '-' + (reportObject.now.getMonth() + 1) + '-' + reportObject.now.getDate();
+    fileName += '.json'
+    fs.writeFileSync(fileName, JSON.stringify(json));
+}
+
+const recipe2Report = function (recipe) {
+    recipe = recipe || {};
+    return {
+        url: recipe.targetUrl,
+        name: recipe.reportName,
+        now: new Date()
+    };
+};
 
 module.exports = {
-    recipe2Report: function (recipe) {
-        recipe = recipe || {};
-        return {
-            url: recipe.targetUrl,
-            name: recipe.reportName,
-            now: new Date()
-        };
-    },
     grep: (recipe) => {
-        let reportObject = this.recipe2Report(recipe);
+        let reportObject = recipe2Report(recipe);
         getHtml(reportObject.url).then(function (body) {
             return body;
         }).then((body) => {
@@ -109,14 +116,11 @@ module.exports = {
                 time: reportObject.now
             });
         }).then((report) => {
-            var fileName = reportObject.name;
-            fileName += '-' + reportObject.now.getFullYear() + '-' + (reportObject.now.getMonth() + 1) + '-' + reportObject.now.getDate();
-            fileName += '.json'
-            fs.writeFileSync(fileName, JSON.stringify(report));
+            writeToDisk(reportObject, report);
         })
     },
     grepDir: async (recipe) => {
-        let reportObject = this.recipe2Report(recipe);
+        let reportObject = recipe2Report(recipe);
         getHtml(reportObject.url).then(async function (body) {
             return body;
         }).then((body) => {
@@ -138,7 +142,7 @@ module.exports = {
         }).then((report) => {
             return Promise.all(report);
         }).then((report) => {
-            log('all:' + JSON.stringify(report));
+            writeToDisk(reportObject, report);
         })
     }
 }
