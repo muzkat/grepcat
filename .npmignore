@@ -1,0 +1,7 @@
+node_modules/
+test/
+src/cve/
+src/pusher/
+src/crawler/crawler.js
+src/reciepes.js
+.idea/

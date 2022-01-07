@@ -1,8 +1,8 @@
 {
-  "name": "grepcat",
-  "version": "1.0.0",
+  "name": "@muzkat/grepcat",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "grepcat.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,9 +11,12 @@
     "url": "git+https://github.com/muzkat/grepcat.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/muzkat/grepcat/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "homepage": "https://github.com/muzkat/grepcat#readme",
   "dependencies": {
