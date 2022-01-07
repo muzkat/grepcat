@@ -18,7 +18,9 @@
   "homepage": "https://github.com/muzkat/grepcat#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.5",
+    "cp-fetch": "^0.3.2",
     "node-fetch": "^2.6.1",
+    "puppeteer": "^10.0.0",
     "request": "^2.88.2",
     "xml2js": "^0.4.23"
   }
