@@ -1,16 +1,18 @@
-let request = require('request'),
+let fetch = require('node-fetch'),
     fs = require('fs'),
     cheerio = require('cheerio'),
-    log = console.log;
+    log = console.log,
+    puppeteer = require('puppeteer');
 
-const getHtml = async function (url) {
-    return new Promise((fulfill, reject) => {
-        request.get({
-            url: url
-        }, function (err, httpResponse, body) {
-            if (err) return reject()
-            fulfill(body);
-        })
+const getHtml = function (url) {
+    return new Promise(async (fulfill, reject) => {
+        try {
+            const response = await fetch(url);
+            let data = await response.text();
+            fulfill(data);
+        } catch (e) {
+            reject();
+        }
     })
 }
 
@@ -27,8 +29,7 @@ const extractLinks = function (html, url) {
     return links;
 }
 
-const isFile = function (item, validEndings) {
-    validEndings = validEndings || ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz'];
+const isFile = function (item, validEndings = ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz']) {
     validEndings = validEndings.map(i => '.' + i);
     let validEnding = false;
     validEndings.map(ending => {
@@ -85,11 +86,19 @@ const createReport = function (url, data, params = {}) {
     }, params))
 }
 
-const writeToDisk = function (reportObject, json) {
+const dateToString = function (now = new Date()) {
+    return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+}
+
+const getFileName = function (reportObject) {
     var fileName = reportObject.name;
-    fileName += '-' + reportObject.now.getFullYear() + '-' + (reportObject.now.getMonth() + 1) + '-' + reportObject.now.getDate();
+    fileName += '-' + dateToString(reportObject.now);
     fileName += '.json'
-    fs.writeFileSync(fileName, JSON.stringify(json));
+    return fileName;
+}
+
+const writeToDisk = function (reportObject, json) {
+    fs.writeFileSync(getFileName(reportObject), JSON.stringify(json));
 }
 
 const recipe2Report = function (recipe) {
@@ -101,10 +110,48 @@ const recipe2Report = function (recipe) {
     };
 };
 
+const screenshot = async function (url, fileName) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    });
+    await page.goto(url);
+    fileName = dateToString() + '-' + fileName + '.png';
+    await page.screenshot({path: 'screenshots/' + fileName});
+
+    await browser.close();
+    return {
+        fileName: fileName
+    };
+}
+
 module.exports = {
-    grep: (recipe) => {
+    writeJsonToFile: writeToDisk,
+    www: (url, internalOnly = true) => {
+        return getHtml(url).then(function (body) {
+            return body;
+        }).then((body) => {
+            return extractLinks(body, url).map((l) => {
+                l.text = l.text || '';
+                l.text = l.text.trim();
+                return l;
+            }).filter((l) => {
+                return internalOnly ? l.href.startsWith(l.base) : l;
+            }).filter((l) => {
+                return internalOnly ? !l.href.includes('#') : l;
+            });
+        })
+    },
+    getLinks: (url) => {
+        return getHtml(url).then((body) => {
+            return body;
+        })
+    },
+    grep: async (recipe) => {
         let reportObject = recipe2Report(recipe);
-        getHtml(reportObject.url).then(function (body) {
+        return getHtml(reportObject.url).then((body) => {
             return body;
         }).then((body) => {
             let arrayOfLinks = extractLinks(body, reportObject.url);
@@ -117,11 +164,18 @@ module.exports = {
             });
         }).then((report) => {
             writeToDisk(reportObject, report);
+            return {
+                reportObject: reportObject,
+                report: report,
+                reportFileName: getFileName(reportObject)
+            };
         })
     },
+    getFileName: getFileName,
+    screenshot: screenshot,
     grepDir: async (recipe) => {
         let reportObject = recipe2Report(recipe);
-        getHtml(reportObject.url).then(async function (body) {
+        return getHtml(reportObject.url).then(async (body) => {
             return body;
         }).then((body) => {
             let items = extractLinks(body, reportObject.url);
@@ -143,6 +197,11 @@ module.exports = {
             return Promise.all(report);
         }).then((report) => {
             writeToDisk(reportObject, report);
+            return {
+                reportObject: reportObject,
+                reportFileName: getFileName(reportObject),
+                report: report
+            };
         })
     }
 }
