@@ -28,7 +28,7 @@ let api = {
             res = undefined;
         try {
             res = await fetch(requestOptions.url + '?' + p.toString(), {
-                method: "post",
+                method: requestOptions.method || "post",
                 body: JSON.stringify(data),
                 headers: requestOptions.headers,
             });
