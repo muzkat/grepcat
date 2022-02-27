@@ -20,20 +20,27 @@ const extractLinks = function (html, url) {
     let $ = cheerio.load(html),
         links = [];
     $('a').each(function (i, elem) {
+        let text = $(elem).text() || '';
+        let href = $(elem).attr('href') || '';
         links.push({
-            text: $(elem).text(),
-            href: $(elem).attr('href'),
+            text: ((text.endsWith('..>') ? href : text) || '').trim(),
+            href: href,
             base: url
         })
     })
-    return links;
+    return links.filter((i) => i.text !== '../' && i.href !== '../');
 }
 
-const isFile = function (item, validEndings = ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz']) {
+let types = {
+    filterEndings: ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz', 'md5']
+}
+
+const isFile = function (item, validEndings = types.filterEndings) {
     validEndings = validEndings.map(i => '.' + i);
     let validEnding = false;
     validEndings.map(ending => {
         if (item.href.endsWith(ending)) validEnding = true;
+        if (validEnding === false && item.href.toLowerCase().endsWith(ending)) validEnding = true;
     })
     return item.href && validEnding === true;
 }
@@ -56,8 +63,9 @@ const contextify = async function (arrayOfLinks, dir) {
             })
         } else {
             links = arrayOfLinks.map(item => {
-                item.isInstaller = isFile(item, ['bin', 'exe']);
-                if (item.isInstaller) item.dlPath = item.href.startsWith('http') ? item.href : item.base + item.href;
+                item.isInstaller = isFile(item, ['bin', 'exe', 'zip', 'tar.gz']);
+                item.isChecksum = isFile(item, ['md5']);
+                if (item.isInstaller || item.isChecksum) item.dlPath = item.href.startsWith('http') ? item.href : item.base + item.href;
                 return item;
             })
         }
