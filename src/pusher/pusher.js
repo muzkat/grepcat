@@ -1,7 +1,8 @@
 const {readdir, readFile} = require('fs').promises,
     fetch = require('node-fetch'),
     mimeLib = require("mime-types"),
-    fs = require('fs');
+    fs = require('fs'),
+    log = console.log;
 
 const readDir = async function (path) {
     try {
@@ -56,50 +57,53 @@ const addToCloud = async function (index = 'test-data', data = {}, id = undefine
         });
     } catch (e) {
         error = true;
-        console.log(res);
+        log(res);
     }
 
     return error ? null : (res ? await res.json() : null);
 }
 
+const deleteFile = function (pathToFile){
+    fs.rmSync(pathToFile, {
+        force: true,
+    });
+}
+
+const archiveFile = async function(fileObj, index, url, headers){
+    const type = '_doc', id = new Date().getTime();
+    let res = await addToCloud(index, fileObj, id, type, {
+        url: url,
+        params: {index, id, type},
+        headers: headers
+    });
+    let error = false;
+    if (res === null) {
+        log('error');
+        error = true;
+    } else {
+        if (res && res.error) {
+            log(res);
+            error = true;
+        }
+    }
+    return error;
+}
+
 const archivePath = async function (path = './', start, ending, index, url, headers) {
     await fetchFiles(path, start, ending).then(async (files) => {
-        console.log(files.length);
-        console.log('BEFORE: ' + files.length)
-        console.table(files);
-
+        log('BEFORE: ' + files.length)
         for (let filename of files) {
-            console.log('PROCESSING')
+            log('PROCESSING: ' + filename)
             let fileObj = await getFileObject(filename, path)
-            console.log(fileObj.filename + ' ' + fileObj.mime)
-            const type = '_doc', id = new Date().getTime();
-            let res = await addToCloud(index, fileObj, id, type, {
-                url: url,
-                params: {index, id, type},
-                headers: headers
-            });
-            let error = false;
-            if (res === null) {
-                console.log('error');
-                error = true;
-            } else {
-                if (res && res.error) {
-                    console.log(res);
-                    error = true;
-                }
-            }
-            if (error === false) {
-                console.log('DELETING')
-                fs.rmSync(path + filename, {
-                    force: true,
-                });
+            log(fileObj.filename + ' ' + fileObj.mime);
+            const uploadError = await archiveFile();
+            if (uploadError === false) {
+                deleteFile(path + filename);
             }
         }
 
-
         let filesAfter = await fetchFiles(path, start, ending) || [];
-        console.log(filesAfter.length);
-        console.log('AFTER: ' + filesAfter.length)
+        log('AFTER: ' + filesAfter.length)
     })
 }
 
@@ -109,5 +113,7 @@ module.exports = {
     fetchFiles,
     getFileObject,
     archivePath,
+    archiveFile,
+    deleteFile,
     addToCloud
 };
