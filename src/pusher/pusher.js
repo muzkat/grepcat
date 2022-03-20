@@ -62,9 +62,8 @@ const addToCloud = async function (index = 'test-data', data = {}, id = undefine
     return error ? null : (res ? await res.json() : null);
 }
 
-const archivePath = function (path = './', start, ending, index, url, headers) {
-
-    fetchFiles(path, start, ending).then(async (files) => {
+const archivePath = async function (path = './', start, ending, index, url, headers) {
+    await fetchFiles(path, start, ending).then(async (files) => {
         console.log(files.length);
         console.log('BEFORE: ' + files.length)
         console.table(files);
