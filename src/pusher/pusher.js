@@ -96,7 +96,7 @@ const archivePath = async function (path = './', start, ending, index, url, head
             log('PROCESSING: ' + filename)
             let fileObj = await getFileObject(filename, path)
             log(fileObj.filename + ' ' + fileObj.mime);
-            const uploadError = await archiveFile();
+            const uploadError = await archiveFile(fileObj, index, url, headers);
             if (uploadError === false) {
                 deleteFile(path + filename);
             }
