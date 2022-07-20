@@ -1,8 +1,13 @@
 # grepcat
 
-### urlgrep.js
+## Features
 
-#### Features
+### urlgrep
 
-* grep all file download links from a site
-* grep all file download links from a webservers index site
+* grep - grep all file download links from a site
+* grepDir - grep all file download links from a webservers index site
+* screenshot - take a screenshot from a website
+
+### wordgrep
+
+### probe

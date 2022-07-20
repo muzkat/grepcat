@@ -5,5 +5,7 @@ const urlgrep = require('./src/crawler/urlgrep'),
 
 module.exports = {
     crawler: urlgrep,
-    pusher, wordgrep, probe
+    pusher,
+    wordgrep,
+    probe
 }

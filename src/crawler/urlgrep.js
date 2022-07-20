@@ -5,10 +5,10 @@ let fetch = require('node-fetch'),
     puppeteer = require('puppeteer');
 
 const getHtml = function (url) {
+    // TODO remove outer promise
     return new Promise(async (fulfill, reject) => {
         try {
-            const response = await fetch(url);
-            let data = await response.text();
+            const data = await fetch(url).then((r) => r.text());
             fulfill(data);
         } catch (e) {
             reject();
@@ -31,11 +31,7 @@ const extractLinks = function (html, url) {
     return links.filter((i) => i.text !== '../' && i.href !== '../');
 }
 
-let types = {
-    filterEndings: ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz', 'md5']
-}
-
-const isFile = function (item, validEndings = types.filterEndings) {
+const isFile = function (item, validEndings = defaults.filterEndings) {
     validEndings = validEndings.map(i => '.' + i);
     let validEnding = false;
     validEndings.map(ending => {
@@ -49,7 +45,10 @@ const isFolder = function (item) {
     return item.href && item.href.endsWith('/') && !item.href.startsWith('..');
 }
 
-const contextify = async function (arrayOfLinks, dir) {
+const contextify = async function (arrayOfLinks, dir = false, config = {
+    fileEndings: ['bin', 'exe', 'zip', 'tar.gz'],
+    checkSums: ['md5']
+}) {
     return new Promise((resolve) => {
         let links;
         if (dir) {
@@ -63,8 +62,8 @@ const contextify = async function (arrayOfLinks, dir) {
             })
         } else {
             links = arrayOfLinks.map(item => {
-                item.isInstaller = isFile(item, ['bin', 'exe', 'zip', 'tar.gz']);
-                item.isChecksum = isFile(item, ['md5']);
+                item.isInstaller = isFile(item, config.fileEndings);
+                item.isChecksum = isFile(item, config.checkSums);
                 if (item.isInstaller || item.isChecksum) item.dlPath = item.href.startsWith('http') ? item.href : item.base + item.href;
                 return item;
             })
@@ -101,7 +100,7 @@ const dateToString = function (now = new Date()) {
 const getFileName = function (reportObject) {
     var fileName = reportObject.name;
     fileName += '-' + dateToString(reportObject.now);
-    fileName += '.json'
+    fileName += '.' + defaults.report.format;
     return fileName;
 }
 
@@ -126,8 +125,8 @@ const screenshot = async function (url, fileName) {
         height: 1080
     });
     await page.goto(url);
-    fileName = dateToString() + '-' + fileName + '.png';
-    await page.screenshot({path: 'screenshots/' + fileName});
+    fileName = dateToString() + '-' + fileName + '.' + defaults.screenshot.format;
+    await page.screenshot({path: defaults.screenshot.path + '/' + fileName});
 
     await browser.close();
     return {
@@ -135,22 +134,48 @@ const screenshot = async function (url, fileName) {
     };
 }
 
+const defaults = {
+    screenshotPath: 'screenshots',
+    screenshotFormat: 'png',
+    screenshot: {
+        path: 'screenshots',
+        format: 'png'
+    },
+    report: {
+        format: 'json'
+    },
+    installerFileEndings: ['bin', 'exe', 'zip', 'tar.gz'],
+    checkSums: ['md5'],
+    filterEndings: ['exe', 'bin', 'jar', 'war', 'zip', 'tar.gz', 'md5']
+};
+
+const contextifyBody = function (body, url, config = {
+    fileEndings: defaults.installerFileEndings,
+    checkSums: defaults.checkSums
+}) {
+    return contextify(extractLinks(body, url), true, config)
+}
+
 module.exports = {
     writeJsonToFile: writeToDisk,
+    crawl: (recipe = {}) => {
+        if (recipe.type && recipe.type in this) {
+            return this[recipe.type](recipe);
+        }
+    },
     www: (url, internalOnly = true) => {
-        return getHtml(url).then(function (body) {
-            return body;
-        }).then((body) => {
-            return extractLinks(body, url).map((l) => {
-                l.text = l.text || '';
-                l.text = l.text.trim();
-                return l;
-            }).filter((l) => {
-                return internalOnly ? l.href.startsWith(l.base) : l;
-            }).filter((l) => {
-                return internalOnly ? !l.href.includes('#') : l;
-            });
-        })
+        return getHtml(url)
+            .then((body) => {
+                return extractLinks(body, url).map((l) => {
+                    l.text = l.text || '';
+                    l.text = l.text.trim();
+                    return l;
+                }).filter((l) => {
+                    return internalOnly ? l.href.startsWith(l.base) : l;
+                }).filter((l) => {
+                    return internalOnly ? !l.href.includes('#') : l;
+                });
+            })
     },
     getLinks: (url) => {
         return getHtml(url).then((body) => {
@@ -159,35 +184,30 @@ module.exports = {
     },
     grep: async (recipe) => {
         let reportObject = recipe2Report(recipe);
-        return getHtml(reportObject.url).then((body) => {
-            return body;
-        }).then((body) => {
-            let arrayOfLinks = extractLinks(body, reportObject.url);
-            return contextify(arrayOfLinks);
-        }).then((links) => {
-            return createReport(reportObject.url, links, {
-                notes: ['links extracted'],
-                name: reportObject.name,
-                time: reportObject.now
-            });
-        }).then((report) => {
-            writeToDisk(reportObject, report);
-            return {
-                reportObject: reportObject,
-                report: report,
-                reportFileName: getFileName(reportObject)
-            };
-        })
+        return getHtml(reportObject.url)
+            .then((body) => {
+                return contextifyBody(body, reportObject.url);
+            }).then((links) => {
+                return createReport(reportObject.url, links, {
+                    notes: ['links extracted'],
+                    name: reportObject.name,
+                    time: reportObject.now
+                });
+            }).then((report) => {
+                writeToDisk(reportObject, report);
+                return {
+                    reportObject: reportObject,
+                    report: report,
+                    reportFileName: getFileName(reportObject)
+                };
+            })
     },
-    getFileName: getFileName,
-    screenshot: screenshot,
+    getFileName,
+    screenshot,
     grepDir: async (recipe) => {
         let reportObject = recipe2Report(recipe);
-        return getHtml(reportObject.url).then(async (body) => {
-            return body;
-        }).then((body) => {
-            let items = extractLinks(body, reportObject.url);
-            return contextify(items, true);
+        return getHtml(reportObject.url).then((body) => {
+            return contextifyBody(body, reportObject.url);
         }).then((links) => {
             return links.map(async (linkItem) => {
                 try {
