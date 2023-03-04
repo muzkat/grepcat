@@ -20,12 +20,9 @@
   },
   "homepage": "https://github.com/muzkat/grepcat#readme",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.5",
-    "cp-fetch": "^0.3.2",
+    "cheerio": "^1.0.0-rc.12",
     "mime-types": "^2.1.35",
     "node-fetch": "^2.6.7",
-    "puppeteer": "^15.4.0",
-    "request": "^2.88.2",
-    "xml2js": "^0.4.23"
+    "puppeteer": "^19.7.2"
   }
 }
