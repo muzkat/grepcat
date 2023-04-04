@@ -94,7 +94,7 @@ const createReport = function (url, data, params = {}) {
 }
 
 const dateToString = function (now = new Date()) {
-    return now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+    return [now.getFullYear(), (now.getMonth() + 1), now.getDate()].join('-');
 }
 
 const getFileName = function (reportObject) {
@@ -117,12 +117,11 @@ const recipe2Report = function (recipe) {
     };
 };
 
-const screenshot = async function (url, fileName) {
+const screenshot = async function (url, fileName, width = 1920, height = 1080) {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setViewport({
-        width: 1920,
-        height: 1080
+        width, height
     });
     await page.goto(url);
     fileName = dateToString() + '-' + fileName + '.' + defaults.screenshot.format;
