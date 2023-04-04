@@ -3,3 +3,4 @@
 test/
 unpublished/
 /test/
+ .DS_Store

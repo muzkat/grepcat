@@ -7,3 +7,4 @@ src/cve/
 src/crawler/crawler.js
 src/reciepes.js
 .idea/
+ .DS_Store
