@@ -1,6 +1,8 @@
 node_modules/
 test/
 unpublished/
+/test/
+/unpublished/
 src/cve/
 src/crawler/crawler.js
 src/reciepes.js
