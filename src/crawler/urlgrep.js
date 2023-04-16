@@ -2,7 +2,8 @@ let fetch = require('node-fetch'),
     fs = require('fs'),
     cheerio = require('cheerio'),
     log = console.log,
-    puppeteer = require('puppeteer');
+    {screenshot} = require('../utils/screenshot.js'),
+    {dateToString} = require("../utils/date");
 
 const getHtml = function (url) {
     // TODO remove outer promise
@@ -29,6 +30,20 @@ const extractLinks = function (html, url) {
         })
     })
     return links.filter((i) => i.text !== '../' && i.href !== '../');
+}
+
+const extract = function (html, extractDefinition = 'a') {
+    let $ = cheerio.load(html),
+        extraction = [];
+    $(extractDefinition).each(function (i, elem) {
+        let text = $(elem).text() || '';
+        extraction.push({
+            eID: extractDefinition,
+            part: text,
+            partSlim: (text || '').trim()
+        })
+    })
+    return extraction;
 }
 
 const isFile = function (item, validEndings = defaults.filterEndings) {
@@ -93,10 +108,6 @@ const createReport = function (url, data, params = {}) {
     }, params))
 }
 
-const dateToString = function (now = new Date()) {
-    return [now.getFullYear(), (now.getMonth() + 1), now.getDate()].join('-');
-}
-
 const getFileName = function (reportObject) {
     var fileName = reportObject.name;
     fileName += '-' + dateToString(reportObject.now);
@@ -117,21 +128,6 @@ const recipe2Report = function (recipe) {
     };
 };
 
-const screenshot = async function (url, fileName, width = 1920, height = 1080) {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setViewport({
-        width, height
-    });
-    await page.goto(url);
-    fileName = dateToString() + '-' + fileName + '.' + defaults.screenshot.format;
-    await page.screenshot({path: defaults.screenshot.path + '/' + fileName});
-
-    await browser.close();
-    return {
-        fileName: fileName
-    };
-}
 
 const defaults = {
     screenshotPath: 'screenshots',
@@ -162,6 +158,8 @@ module.exports = {
             return this[recipe.type](recipe);
         }
     },
+    getHtml,
+    extract,
     www: (url, internalOnly = true) => {
         return getHtml(url)
             .then((body) => {
