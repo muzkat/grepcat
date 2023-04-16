@@ -23,6 +23,6 @@
     "cheerio": "^1.0.0-rc.12",
     "mime-types": "^2.1.35",
     "node-fetch": "^2.6.7",
-    "puppeteer": "^19.7.2"
+    "puppeteer": "^19.9.0"
   }
 }
