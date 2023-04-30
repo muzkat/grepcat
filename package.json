@@ -1,6 +1,6 @@
 {
   "name": "@muzkat/grepcat",
-  "version": "0.1.6-0",
+  "version": "0.1.6",
   "description": "",
   "main": "grepcat.js",
   "scripts": {
