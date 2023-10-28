@@ -17,8 +17,12 @@ const getHtml = function (url) {
     })
 }
 
+const getCheerioObject = function (html){
+   return cheerio.load(html)
+}
+
 const extractLinks = function (html, url) {
-    let $ = cheerio.load(html),
+    let $ = getCheerioObject(html),
         links = [];
     $('a').each(function (i, elem) {
         let text = $(elem).text() || '';
@@ -33,7 +37,7 @@ const extractLinks = function (html, url) {
 }
 
 const extract = function (html, extractDefinition = 'a') {
-    let $ = cheerio.load(html),
+    let $ = getCheerioObject(html),
         extraction = [];
     $(extractDefinition).each(function (i, elem) {
         let text = $(elem).text() || '';
@@ -152,6 +156,7 @@ const contextifyBody = function (body, url, config = {
 }
 
 module.exports = {
+    getCheerioObject,
     writeJsonToFile: writeToDisk,
     crawl: (recipe = {}) => {
         if (recipe.type && recipe.type in this) {
