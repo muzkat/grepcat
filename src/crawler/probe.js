@@ -1,5 +1,3 @@
-let fetch = require('node-fetch');
-
 /**
  *
  * @param url

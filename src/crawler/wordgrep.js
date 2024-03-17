@@ -1,6 +1,14 @@
-let fetch = require('node-fetch'), log = console.log
 const fetchData = function (url) {
-    return fetch(url).then((r) => r.json());
+    return fetch(url)
+        .then((r) => {
+            let {status} = r;
+            if (status === 200) {
+                r.json();
+            } else {
+                console.debug('error fetching posts via api: ' + url);
+                console.debug('http status ' + status);
+            }
+        });
 }
 const dateStrToIso = function (dateStr) {
     return new Date(dateStr).toISOString();
@@ -31,7 +39,7 @@ const getPosts = function (url, items = 100, page) {
     const postUrl = this.getBasePath(url) + 'posts?per_page=' + items
     return fetchData(postUrl)
         .then((data = []) => {
-            return data.map(transformPost);
+            return Array.isArray(data) ? data.map(transformPost) : [];
         })
 }
 

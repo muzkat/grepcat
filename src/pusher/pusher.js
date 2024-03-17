@@ -1,5 +1,4 @@
 const {readdir, readFile} = require('fs').promises,
-    fetch = require('node-fetch'),
     mimeLib = require("mime-types"),
     fs = require('fs'),
     log = console.log;

@@ -1,5 +1,4 @@
-let fetch = require('node-fetch'),
-    fs = require('fs'),
+let fs = require('fs'),
     cheerio = require('cheerio'),
     log = console.log,
     {screenshot} = require('../utils/screenshot.js'),
