@@ -1,7 +1,7 @@
 let fs = require('fs'),
     cheerio = require('cheerio'),
     log = console.log,
-    {screenshot} = require('../utils/screenshot.js'),
+    {browser} = require('../utils/screenshot.js'),
     {dateToString} = require("../utils/date");
 
 const getHtml = function (url) {
@@ -16,8 +16,13 @@ const getHtml = function (url) {
     })
 }
 
-const getCheerioObject = function (html){
-   return cheerio.load(html)
+const screenshot = async function (...arguments) {
+    let b = await browser();
+    await b.takeScreenshot(...arguments);
+}
+
+const getCheerioObject = function (html) {
+    return cheerio.load(html)
 }
 
 const extractLinks = function (html, url) {
@@ -204,7 +209,7 @@ module.exports = {
             })
     },
     getFileName,
-    screenshot,
+    browser, screenshot,
     grepDir: async (recipe) => {
         let reportObject = recipe2Report(recipe);
         return getHtml(reportObject.url).then((body) => {
