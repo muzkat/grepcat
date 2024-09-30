@@ -4,7 +4,8 @@
   "description": "",
   "main": "grepcat.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release:local": "npm version patch && npm publish && npm version prepatch"
   },
   "repository": {
     "type": "git",
