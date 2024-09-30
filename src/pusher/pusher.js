@@ -1,23 +1,6 @@
-const {readdir, readFile} = require('fs').promises,
-    mimeLib = require("mime-types"),
-    fs = require('fs'),
+const mimeLib = require("mime-types"),
     log = console.log;
-
-const readDir = async function (path) {
-    try {
-        return await readdir(path);
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-const readFileFn = async function (path, encoding = 'utf8') {
-    try {
-        return await readFile(path, {encoding: encoding});
-    } catch (err) {
-        console.error(err);
-    }
-};
+const {readDir, readFileFn, deleteFile} = require("../utils/file");
 
 const fetchFiles = function (path, start, ending) {
     return readDir(path).then(async (files) => {
@@ -27,7 +10,7 @@ const fetchFiles = function (path, start, ending) {
 
 const getFileObject = async function (filename, path) {
     let filePath = path + filename;
-    let base64 = await readFile(filePath, 'base64');
+    let base64 = await readFileFn(filePath, 'base64');
     let mime = mimeLib.lookup(filename);
     let bytes = base64.length;
     return {
@@ -62,13 +45,7 @@ const addToCloud = async function (index = 'test-data', data = {}, id = undefine
     return error ? null : (res ? await res.json() : null);
 }
 
-const deleteFile = function (pathToFile){
-    fs.rmSync(pathToFile, {
-        force: true,
-    });
-}
-
-const archiveFile = async function(fileObj, index, url, headers){
+const archiveFile = async function (fileObj, index, url, headers) {
     const type = '_doc', id = new Date().getTime();
     let res = await addToCloud(index, fileObj, id, type, {
         url: url,
