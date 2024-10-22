@@ -3,7 +3,7 @@ const fetchData = function (url) {
         .then((r) => {
             let {status} = r;
             if (status === 200) {
-                r.json();
+                return r.json();
             } else {
                 console.debug('error fetching posts via api: ' + url);
                 console.debug('http status ' + status);
